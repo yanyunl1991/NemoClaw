@@ -82,6 +82,7 @@ def action_plan(
     blueprint: dict[str, Any],
     *,
     dry_run: bool = False,
+    endpoint_url: str | None = None,
 ) -> dict[str, Any]:
     """Plan the deployment: validate inputs, resolve profile, check prerequisites."""
     rid = emit_run_id()
@@ -103,6 +104,10 @@ def action_plan(
 
     sandbox_cfg: dict[str, Any] = blueprint.get("components", {}).get("sandbox", {})
     inference_cfg: dict[str, Any] = inference_profiles[profile]
+
+    # Override endpoint if provided (e.g., NCP dynamic endpoint)
+    if endpoint_url:
+        inference_cfg = {**inference_cfg, "endpoint": endpoint_url}
 
     plan: dict[str, Any] = {
         "run_id": rid,
@@ -134,6 +139,7 @@ def action_apply(
     profile: str,
     blueprint: dict[str, Any],
     plan_path: str | None = None,
+    endpoint_url: str | None = None,
 ) -> None:
     """Apply the plan: create sandbox, configure provider, set inference route."""
     rid = emit_run_id()
@@ -147,6 +153,11 @@ def action_apply(
         blueprint.get("components", {}).get("inference", {}).get("profiles", {})
     )
     inference_cfg: dict[str, Any] = inference_profiles.get(profile, {})
+
+    # Override endpoint if provided (e.g., NCP dynamic endpoint)
+    if endpoint_url:
+        inference_cfg = {**inference_cfg, "endpoint": endpoint_url}
+
     sandbox_cfg: dict[str, Any] = blueprint.get("components", {}).get("sandbox", {})
 
     sandbox_name: str = sandbox_cfg.get("name", "openclaw")
@@ -306,14 +317,22 @@ def main() -> None:
     parser.add_argument("--run-id", dest="run_id")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--endpoint-url",
+        dest="endpoint_url",
+        default=None,
+        help="Override endpoint URL for the selected profile",
+    )
 
     args = parser.parse_args()
     blueprint = load_blueprint()
 
     if args.action == "plan":
-        action_plan(args.profile, blueprint, dry_run=args.dry_run)
+        action_plan(args.profile, blueprint, dry_run=args.dry_run, endpoint_url=args.endpoint_url)
     elif args.action == "apply":
-        action_apply(args.profile, blueprint, plan_path=args.plan_path)
+        action_apply(
+            args.profile, blueprint, plan_path=args.plan_path, endpoint_url=args.endpoint_url
+        )
     elif args.action == "status":
         action_status(rid=args.run_id)
     elif args.action == "rollback":

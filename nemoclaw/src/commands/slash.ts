@@ -12,6 +12,7 @@
 
 import type { PluginCommandContext, PluginCommandResult, OpenClawPluginApi } from "../index.js";
 import { loadState } from "../blueprint/state.js";
+import { loadOnboardConfig } from "../onboard/config.js";
 
 export function handleSlashCommand(
   ctx: PluginCommandContext,
@@ -24,6 +25,8 @@ export function handleSlashCommand(
       return slashStatus();
     case "eject":
       return slashEject();
+    case "onboard":
+      return slashOnboard();
     default:
       return slashHelp();
   }
@@ -37,8 +40,9 @@ function slashHelp(): PluginCommandResult {
       "Usage: `/nemoclaw <subcommand>`",
       "",
       "Subcommands:",
-      "  `status` - Show sandbox, blueprint, and inference state",
-      "  `eject`  - Show rollback instructions",
+      "  `status`  - Show sandbox, blueprint, and inference state",
+      "  `eject`   - Show rollback instructions",
+      "  `onboard` - Show onboarding status and instructions",
       "",
       "For full management use the CLI:",
       "  `openclaw nemoclaw status`",
@@ -74,6 +78,44 @@ function slashStatus(): PluginCommandResult {
   }
 
   return { text: lines.join("\n") };
+}
+
+function slashOnboard(): PluginCommandResult {
+  const config = loadOnboardConfig();
+  if (config) {
+    return {
+      text: [
+        "**NemoClaw Onboard Status**",
+        "",
+        `Endpoint: ${config.endpointType} (${config.endpointUrl})`,
+        config.ncpPartner ? `NCP Partner: ${config.ncpPartner}` : null,
+        `Model: ${config.model}`,
+        `Credential: $${config.credentialEnv}`,
+        `Profile: ${config.profile}`,
+        `Onboarded: ${config.onboardedAt}`,
+        "",
+        "To reconfigure, run: `openclaw nemoclaw onboard`",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    };
+  }
+  return {
+    text: [
+      "**NemoClaw Onboarding**",
+      "",
+      "No configuration found. Run the onboard command to set up inference:",
+      "",
+      "```",
+      "openclaw nemoclaw onboard",
+      "```",
+      "",
+      "Or non-interactively:",
+      "```",
+      'openclaw nemoclaw onboard --api-key "$NVIDIA_API_KEY" --endpoint build --model nvidia/nemotron-3-super-120b-a12b',
+      "```",
+    ].join("\n"),
+  };
 }
 
 function slashEject(): PluginCommandResult {

@@ -15,6 +15,7 @@ import { cliLaunch } from "./commands/launch.js";
 import { cliConnect } from "./commands/connect.js";
 import { cliEject } from "./commands/eject.js";
 import { cliLogs } from "./commands/logs.js";
+import { cliOnboard } from "./commands/onboard.js";
 
 export function registerCliCommands(ctx: PluginCliContext, api: OpenClawPluginApi): void {
   const { program, logger } = ctx;
@@ -103,4 +104,33 @@ export function registerCliCommands(ctx: PluginCliContext, api: OpenClawPluginAp
         pluginConfig,
       });
     });
+
+  // openclaw nemoclaw onboard
+  nemoclaw
+    .command("onboard")
+    .description("Interactive setup: configure NVIDIA API key, endpoint, and model")
+    .option("--api-key <key>", "NVIDIA API key (skips prompt)")
+    .option("--endpoint <type>", "Endpoint type: build, ncp, nim-local, vllm, custom")
+    .option("--ncp-partner <name>", "NCP partner name (when endpoint is ncp)")
+    .option("--endpoint-url <url>", "Endpoint URL (for ncp, nim-local, or custom)")
+    .option("--model <model>", "Model ID to use")
+    .action(
+      async (opts: {
+        apiKey?: string;
+        endpoint?: string;
+        ncpPartner?: string;
+        endpointUrl?: string;
+        model?: string;
+      }) => {
+        await cliOnboard({
+          apiKey: opts.apiKey,
+          endpoint: opts.endpoint,
+          ncpPartner: opts.ncpPartner,
+          endpointUrl: opts.endpointUrl,
+          model: opts.model,
+          logger,
+          pluginConfig,
+        });
+      },
+    );
 }

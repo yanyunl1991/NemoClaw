@@ -16,6 +16,7 @@ export interface BlueprintRunOptions {
   runId?: string;
   jsonOutput?: boolean;
   dryRun?: boolean;
+  endpointUrl?: string;
 }
 
 export interface BlueprintRunResult {
@@ -48,6 +49,7 @@ export async function execBlueprint(
   if (options.planPath) args.push("--plan", options.planPath);
   if (options.runId) args.push("--run-id", options.runId);
   if (options.dryRun) args.push("--dry-run");
+  if (options.endpointUrl) args.push("--endpoint-url", options.endpointUrl);
 
   logger.info(`Running blueprint: ${options.action} (profile: ${options.profile})`);
 

@@ -8,6 +8,7 @@ digest: ""  # Computed at release time
 
 profiles:
   - default
+  - ncp
   - nim-local
   - vllm
 
@@ -29,6 +30,14 @@ components:
         provider_name: "nvidia-inference"
         endpoint: "https://integrate.api.nvidia.com/v1"
         model: "nvidia/nemotron-3-super-120b-a12b"
+
+      ncp:
+        provider_type: "nvidia"
+        provider_name: "nvidia-ncp"
+        endpoint: ""
+        model: "nvidia/nemotron-3-super-120b-a12b"
+        credential_env: "NVIDIA_API_KEY"
+        dynamic_endpoint: true
 
       nim-local:
         provider_type: "openai"
